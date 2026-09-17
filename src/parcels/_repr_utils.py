@@ -6,10 +6,10 @@ import textwrap
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
 
+import dask.array as da
 import numpy as np
 import xarray as xr
 import zarr
-from dask.base import is_dask_collection
 
 from parcels._chunk_cached_array.core import ChunkCachedArray
 from parcels._core._windowed_array import WindowedArray
@@ -219,21 +219,23 @@ def _print_time_interval(time_interval: TimeInterval | None) -> str:
 
 
 def _field_backend(field: Field | VectorField) -> str | None:
-    if hasattr(field, "data"):
-        if isinstance(field.data, WindowedArray):
-            return "WindowedArray"
-        elif is_dask_collection(field.data.data):
-            return "Dask"
-        elif isinstance(field.data.variable._data, ChunkCachedArray):
-            return "ChunkCachedArray"
-        elif isinstance(field.data.variable._data, zarr.Array):
-            return "Zarr"
-        elif isinstance(field.data.data, np.ndarray):
-            return "NumPy"
-        else:
-            return type(field.data).__name__
-    else:
+    if not hasattr(field, "data"):
         return None
+    data = field.data
+    if isinstance(data, WindowedArray):
+        return "WindowedArray"
+    # use variable._data (not .data), which would force lazy-backend arrays to resolve/fetch
+    raw = data.variable._data
+    if isinstance(raw, ChunkCachedArray):
+        return "ChunkCachedArray"
+    elif isinstance(raw, zarr.Array):
+        return "Zarr"
+    elif isinstance(raw, da.Array):
+        return "Dask"
+    elif isinstance(raw, np.ndarray):
+        return "NumPy"
+    else:
+        return type(data).__name__
 
 
 def fieldset_describe(fieldset: FieldSet) -> str:
