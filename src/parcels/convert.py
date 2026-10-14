@@ -126,7 +126,6 @@ _CROCO_EXPECTED_COORDS: list[tuple[str, _Status]] = [
 _CROCO_VARNAMES_MAPPING: dict[str, str] = {
     "x_rho": "lon",
     "y_rho": "lat",
-    "s_w": "depth",
 }
 
 
@@ -516,7 +515,7 @@ def croco_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.D
                 sgrid.FaceNodePadding("xi_u", "xi_rho", sgrid.Padding.HIGH),
                 sgrid.FaceNodePadding("eta_v", "eta_rho", sgrid.Padding.HIGH),
             ),
-            vertical_dimensions=(sgrid.FaceNodePadding("s_rho", "depth", sgrid.Padding.HIGH),),
+            vertical_dimensions=(sgrid.FaceNodePadding("s_rho", "s_w", sgrid.Padding.HIGH),),
         ).to_attrs(),
     )
 
