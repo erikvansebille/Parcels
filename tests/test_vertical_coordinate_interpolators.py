@@ -35,7 +35,9 @@ def _sigma_grid(registration):
     ds = simple_UV_sigma_dataset(**SIGMA_SHAPE)
     lateral_dims = ("YC", "XC") if registration == "face" else ("YG", "XG")
     t, level, y, x = np.meshgrid(*(np.arange(n) for n in SIGMA_SHAPE.values()), indexing="ij")
-    ds = ds.assign_coords(depth=(("time", "ZF", *lateral_dims), _linear_depth(level, y, x, t), {"axis": "Z"}))
+    ds = ds.assign_coords(
+        depth=(("time", "ZF", *lateral_dims), _linear_depth(level, y, x, t), {"axis": "Z", "positive": "down"})
+    )
     return FieldSet.from_sgrid_conventions(ds).U.grid
 
 
@@ -113,7 +115,7 @@ def test_vertical_coordinate_linear_is_continuous(registration):
     lateral_dims = ("YC", "XC") if registration == "face" else ("YG", "XG")
     rng = np.random.default_rng(1)
     depth = ds["depth"].values + rng.random(ds["depth"].shape) * 0.01  # non-linear depth, unlike _sigma_grid
-    ds = ds.assign_coords(depth=(("time", "ZF", *lateral_dims), depth, {"axis": "Z"}))
+    ds = ds.assign_coords(depth=(("time", "ZF", *lateral_dims), depth, {"axis": "Z", "positive": "down"}))
     grid = FieldSet.from_sgrid_conventions(ds).U.grid
     grid_positions = _random_grid_positions(npart=100)
     yi, npart = grid_positions["Y"]["index"], len(grid_positions["Y"]["index"])

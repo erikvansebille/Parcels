@@ -290,6 +290,7 @@ def _maybe_expand_depth_dimension(ds: xr.Dataset) -> xr.Dataset:
             "No depth dimension found in dataset. Assuming surface data and adding a singleton depth dimension."
         )
         ds = ds.expand_dims(depth=[0]).transpose("time", "depth", ..., missing_dims="ignore")
+        ds["depth"].attrs["positive"] = "up"
     return ds
 
 
@@ -711,6 +712,7 @@ def delft3d_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr
             vertical_dimensions=(sgrid.FaceNodePadding("Z", "LAYER", sgrid.Padding.HIGH),),
         ),
     )
+    ds.variables["depth"].attrs["positive"] = "up"
 
     return ds
 

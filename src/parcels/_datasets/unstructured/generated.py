@@ -59,7 +59,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(
             description="zonal velocity", units="m/s", location="face", mesh="delaunay", Conventions="UGRID-1.0"
@@ -72,7 +72,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(
             description="meridional velocity", units="m/s", location="face", mesh="delaunay", Conventions="UGRID-1.0"
@@ -85,7 +85,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zf", "n_node"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zf=(["zf"], zf),
+            zf=(["zf"], zf, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(
             description="meridional velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -98,7 +98,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(description="pressure", units="N/m^2", location="face", mesh="delaunay", Conventions="UGRID-1.0"),
     )
@@ -110,7 +110,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(
             description="Tracer field sampled on face centers",
@@ -127,7 +127,7 @@ def simple_small_delaunay(nx=10, ny=10):
         dims=["time", "zc", "n_node"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "down"}),
         ),
         attrs=dict(
             description="Tracer field sampled on face vertices",
@@ -405,4 +405,6 @@ def sigma_coordinate_lattice_dataset(nx, x_range, y_range, nz, bottom_depth, eta
     ds.uxgrid.node_lat.attrs["units"] = "m"
     ds.variables["zf"].attrs["axis"] = "Z"
     ds.variables["zc"].attrs["axis"] = "Z"
+    ds.variables["zf"].attrs["positive"] = "down"
+    ds.variables["zc"].attrs["positive"] = "down"
     return ds

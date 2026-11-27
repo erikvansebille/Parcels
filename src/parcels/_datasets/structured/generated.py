@@ -18,7 +18,7 @@ def simple_UV_dataset(n_times=360, nz=2, ny=30, nx=4, maxdepth=1, mesh_str="sphe
         {"U": (["time", "depth", "YG", "XG"], np.zeros(shape)), "V": (["time", "depth", "YG", "XG"], np.zeros(shape))},
         coords={
             "time": (["time"], xr.date_range("2000", "2001", n_times), {"axis": "T"}),
-            "depth": (["depth"], np.linspace(0, maxdepth, nz), {"axis": "Z", "units": "m"}),
+            "depth": (["depth"], np.linspace(0, maxdepth, nz), {"axis": "Z", "units": "m", "positive": "down"}),
             "YC": (["YC"], np.arange(ny) + 0.5, {"axis": "Y", "units": y_unit}),
             "YG": (["YG"], np.arange(ny), {"axis": "Y", "units": y_unit}),
             "XC": (["XC"], np.arange(nx) + 0.5, {"axis": "X", "units": x_unit}),
@@ -70,7 +70,7 @@ def simple_UV_sigma_dataset(
     ds["W"] = (["time", "ZF", "YG", "XG"], np.zeros((n_times, nz, ny, nx)))
     return ds.assign_coords(
         time=(["time"], xr.date_range(start_time, periods=n_times, freq="1h"), {"axis": "T"}),
-        depth=(["time", "ZF", "YC", "XC"], zf, {"axis": "Z"}),
+        depth=(["time", "ZF", "YC", "XC"], zf, {"axis": "Z", "positive": "down"}),
     )
 
 
@@ -102,7 +102,7 @@ def radial_rotation_dataset(xdim=200, ydim=200):  # Define 2D flat, square field
         {"U": (["time", "depth", "YG", "XG"], U), "V": (["time", "depth", "YG", "XG"], V)},
         coords={
             "time": (["time"], [np.timedelta64(0, "s"), np.timedelta64(10, "D")], {"axis": "T"}),
-            "depth": (["depth"], np.array([0.0]), {"axis": "Z"}),
+            "depth": (["depth"], np.array([0.0]), {"axis": "Z", "positive": "up"}),
             "YC": (["YC"], np.arange(ydim) + 0.5, {"axis": "Y"}),
             "YG": (["YG"], np.arange(ydim), {"axis": "Y"}),
             "XC": (["XC"], np.arange(xdim) + 0.5, {"axis": "X"}),
@@ -146,7 +146,7 @@ def moving_eddy_dataset(xdim=2, ydim=2):
         {"U": (["time", "depth", "YG", "XG"], U), "V": (["time", "depth", "YG", "XG"], V)},
         coords={
             "time": (["time"], time, {"axis": "T"}),
-            "depth": (["depth"], np.array([0.0]), {"axis": "Z"}),
+            "depth": (["depth"], np.array([0.0]), {"axis": "Z", "positive": "up"}),
             "YC": (["YC"], np.arange(ydim) + 0.5, {"axis": "Y"}),
             "YG": (["YG"], np.arange(ydim), {"axis": "Y"}),
             "XC": (["XC"], np.arange(xdim) + 0.5, {"axis": "X"}),
@@ -207,7 +207,7 @@ def decaying_moving_eddy_dataset(xdim=2, ydim=2):
         {"U": (["time", "depth", "YG", "XG"], U), "V": (["time", "depth", "YG", "XG"], V)},
         coords={
             "time": (["time"], time, {"axis": "T"}),
-            "depth": (["depth"], np.array([0.0]), {"axis": "Z"}),
+            "depth": (["depth"], np.array([0.0]), {"axis": "Z", "positive": "up"}),
             "YC": (["YC"], np.arange(ydim) + 0.5, {"axis": "Y"}),
             "YG": (["YG"], np.arange(ydim), {"axis": "Y"}),
             "XC": (["XC"], np.arange(xdim) + 0.5, {"axis": "X"}),

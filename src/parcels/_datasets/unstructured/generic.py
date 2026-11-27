@@ -62,7 +62,7 @@ def _stommel_gyre_delaunay():
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "up"}),
         ),
         attrs=dict(
             description="zonal velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -75,7 +75,7 @@ def _stommel_gyre_delaunay():
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "up"}),
         ),
         attrs=dict(
             description="meridional velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -88,7 +88,7 @@ def _stommel_gyre_delaunay():
         dims=["time", "zf", "n_node"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zf=(["zf"], zf),
+            zf=(["zf"], zf, {"axis": "Z", "positive": "up"}),
         ),
         attrs=dict(
             description="meridional velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -101,7 +101,7 @@ def _stommel_gyre_delaunay():
         dims=["time", "zc", "n_face"],
         coords=dict(
             time=(["time"], [TIME[0]]),
-            zc=(["zc"], zc),
+            zc=(["zc"], zc, {"axis": "Z", "positive": "up"}),
         ),
         attrs=dict(description="pressure", units="N/m^2", location="node", mesh="delaunay", Conventions="UGRID-1.0"),
     )
@@ -183,7 +183,7 @@ def _fesom2_square_delaunay_uniform_z_coordinate():
         dims=["time", "nz", "n_node"],
         coords=dict(
             time=(["time"], TIME),
-            nz=(["nz"], zf),
+            nz=(["nz"], zf, {"positive": "down"}),
         ),
         attrs=dict(
             description="vertical velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -284,7 +284,7 @@ def _fesom2_square_delaunay_antimeridian():
         dims=["time", "nz", "n_node"],
         coords=dict(
             time=(["time"], TIME),
-            nz=(["nz"], zf),
+            nz=(["nz"], zf, {"positive": "down"}),
         ),
         attrs=dict(
             description="vertical velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -384,7 +384,7 @@ def _icon_square_delaunay_uniform_z_coordinate():
         dims=["time", "depth_2", "n_face"],
         coords=dict(
             time=(["time"], TIME),
-            depth_2=(["depth_2"], zf),
+            depth_2=(["depth_2"], zf, {"positive": "down"}),
         ),
         attrs=dict(
             description="vertical velocity", units="m/s", location="node", mesh="delaunay", Conventions="UGRID-1.0"
@@ -438,21 +438,21 @@ def _ux_constant_flow_face_centered_2D():
                 U,
                 uxgrid=uxgrid,
                 dims=["time", "zc", "n_face"],
-                coords=dict(time=(["time"], TIME), zc=(["zc"], zc)),
+                coords=dict(time=(["time"], TIME), zc=(["zc"], zc, {"axis": "Z", "positive": "up"})),
                 attrs=dict(location="face", mesh="delaunay", Conventions="UGRID-1.0"),
             ),
             "V": ux.UxDataArray(
                 V,
                 uxgrid=uxgrid,
                 dims=["time", "zc", "n_face"],
-                coords=dict(time=(["time"], TIME), zc=(["zc"], zc)),
+                coords=dict(time=(["time"], TIME), zc=(["zc"], zc, {"axis": "Z", "positive": "up"})),
                 attrs=dict(location="face", mesh="delaunay", Conventions="UGRID-1.0"),
             ),
             "W": ux.UxDataArray(
                 W,
                 uxgrid=uxgrid,
                 dims=["time", "zf", "n_node"],
-                coords=dict(time=(["time"], TIME), nz=(["zf"], zf)),
+                coords=dict(time=(["time"], TIME), zf=(["zf"], zf, {"axis": "Z", "positive": "up"})),
                 attrs=dict(location="node", mesh="delaunay", Conventions="UGRID-1.0"),
             ),
         },

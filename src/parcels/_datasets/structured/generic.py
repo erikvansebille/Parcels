@@ -45,7 +45,7 @@ def _rotated_curvilinear_grid():
                 np.arange(Z) + 0.5,
                 {"axis": "Z"},
             ),
-            "depth": (["ZG"], np.arange(Z), {"axis": "Z"}),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
             "lon": (
                 ["YG", "XG"],
@@ -123,7 +123,7 @@ def _unrolled_cone_curvilinear_grid():
                 np.arange(Z) + 0.5,
                 {"axis": "Z"},
             ),
-            "depth": (["ZG"], np.arange(Z), {"axis": "Z"}),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
             "lon": (
                 ["YG", "XG"],
@@ -192,7 +192,7 @@ datasets = {
             ),
             "lon": (["XG"], 2 * np.pi / X * np.arange(0, X), {"units": "m"}),
             "lat": (["YG"], 2 * np.pi / (Y) * np.arange(0, Y), {"units": "m"}),
-            "depth": (["ZG"], np.arange(Z)),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
         },
     ).pipe(
@@ -247,7 +247,7 @@ datasets = {
             ),
             "lon": (["XG"], 2 * np.pi / X * np.arange(0, X), {"units": "m"}),
             "lat": (["YG"], 2 * np.pi / (Y) * np.arange(0, Y), {"units": "m"}),
-            "depth": (["ZG"], np.arange(Z)),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
         },
     ).pipe(
@@ -302,7 +302,7 @@ datasets = {
             ),
             "lon": (["XG"], 2 * np.pi / X * np.arange(0, X), {"units": "m"}),
             "lat": (["YG"], 2 * np.pi / (Y) * np.arange(0, Y), {"units": "m"}),
-            "depth": (["ZG"], np.arange(Z)),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
         },
     ).pipe(
@@ -357,7 +357,7 @@ datasets = {
             ),
             "lon": (["XG"], 2 * np.pi / X * np.arange(0, X), {"units": "m"}),
             "lat": (["YG"], 2 * np.pi / (Y) * np.arange(0, Y), {"units": "m"}),
-            "depth": (["ZG"], np.arange(Z)),
+            "depth": (["ZG"], np.arange(Z), {"axis": "Z", "positive": "down"}),
             "time": (["time"], TIME, {"axis": "T"}),
         },
     ).pipe(

@@ -154,7 +154,7 @@ def reduced_dims_dataset(
             coords[node] = ([node], np.arange(n, dtype=float), {"axis": axis, "units": "m"})
             coords[face] = ([face], np.arange(sgrid.get_n_faces(n, padding), dtype=float) + 0.5, {"axis": axis})
     if "Z" in spatial_axes:
-        coords["depth"] = (["ZG"], np.arange(sizes.get("Z", 4), dtype=float))
+        coords["depth"] = (["ZG"], np.arange(sizes.get("Z", 4), dtype=float), {"axis": "Z", "positive": "down"})
     if {"X", "Y"} <= spatial_axes:
         coords["lon"] = (["XG"], np.arange(sizes.get("X", 4), dtype=float), {"units": "m"})
         coords["lat"] = (["YG"], np.arange(sizes.get("Y", 4), dtype=float), {"units": "m"})

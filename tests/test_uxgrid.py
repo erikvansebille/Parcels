@@ -27,15 +27,14 @@ def test_uxgrid_depth_positive_direction(time_varying):
     uxds = uxdatasets["stommel_gyre_delaunay"]
     if time_varying:
         values = np.broadcast_to(np.array([0.0, 1.0])[None, :, None], (2, 2, uxds.uxgrid.n_face))
-        z = ux.UxDataArray(values, dims=("time", "zf", "n_face"), uxgrid=uxds.uxgrid)
+        z = ux.UxDataArray(values, dims=("time", "zf", "n_face"), uxgrid=uxds.uxgrid, attrs={"positive": "up"})
     else:
         z = uxds.coords["zf"].copy(deep=True)
-        z.attrs.pop("positive", None)
     grid = UxGrid(uxds.uxgrid, z=z, mesh=FlatMesh())
 
-    assert grid.depth_positive_direction == "down"
-    grid.z.attrs["positive"] = "up"
     assert grid.depth_positive_direction == "up"
+    grid.z.attrs["positive"] = "down"
+    assert grid.depth_positive_direction == "down"
 
 
 @pytest.mark.parametrize("uxds", [uxdatasets["stommel_gyre_delaunay"]])
