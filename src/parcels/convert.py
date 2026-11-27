@@ -319,9 +319,32 @@ def _normalize_fields(fields: dict[str, xr.Dataset | xr.DataArray]) -> dict[str,
     return normalized
 
 
-def _flip_w_to_positive_down(ds: xr.Dataset) -> xr.Dataset:
-    """Negate W to convert from up positive to down positive (as that's the direction of positive z)."""
-    if "W" in ds.data_vars:
+def _maybe_flip_w_to_positive_depth_direction(ds: xr.Dataset) -> xr.Dataset:
+    """Negate W when its standard name and the depth coordinate have opposite positive directions."""
+    if "W" not in ds.data_vars:
+        return ds
+
+    standard_name = ds["W"].attrs.get("standard_name", "")
+    standard_name = standard_name.lower() if isinstance(standard_name, str) else ""
+    upward = "upward" in standard_name
+    downward = "downward" in standard_name
+    if upward == downward:
+        logger.warning(
+            "Cannot determine the positive direction of W from its standard_name. "
+            "Be careful to confirm that positive W is in the same direction as positive depth."
+        )
+        return ds
+
+    positive = ds["depth"].attrs.get("positive") if "depth" in ds else None
+    positive = positive.lower() if isinstance(positive, str) else None
+    if positive not in ("up", "down"):
+        logger.warning(
+            "Cannot determine the positive direction of depth from its positive attribute. "
+            "Be careful to confirm that positive W is in the same direction as positive depth."
+        )
+        return ds
+
+    if (upward and positive == "down") or (downward and positive == "up"):
         ds["W"] = ds["W"].copy(data=-ds["W"].data)  # new array, so that the caller's data is left untouched
     return ds
 
@@ -350,6 +373,7 @@ def nemo_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.Da
     The NEMO model (https://nemo-ocean.eu/) is used by a variety of oceanographic institutions around the world.
     Output from these models may differ subtly in terms of variable names and metadata conventions.
     This function attempts to standardize these differences to create a Parcels FieldSet.
+    W is negated when its ``standard_name`` indicates a direction opposite to the ``positive`` attribute of depth.
     If you encounter issues with your specific NEMO dataset, please open an issue on the Parcels GitHub repository with details about your dataset.
 
     """
@@ -391,7 +415,10 @@ def nemo_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.Da
             "HINT: Add xarray metadata attribute 'axis' to dimension - e.g., ds['lat'].attrs['axis'] = 'Y'"
         )
 
-    ds = _flip_w_to_positive_down(ds)
+    if "W" in ds.data_vars and "standard_name" not in ds["W"].attrs:
+        # NEMO's vertical velocity is positive upward but its output often lacks a standard_name
+        ds["W"].attrs = {**ds["W"].attrs, "standard_name": "upward_sea_water_velocity"}
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     ds = sgrid._attach_sgrid_metadata(
         ds,
@@ -467,6 +494,7 @@ def mom6_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.Da
     ds = _assign_dims_as_coords(ds, _MOM6_DIMENSION_COORD_NAMES)
     ds = _set_coords(ds, _MOM6_DIMENSION_COORD_NAMES)
     ds = _set_axis_attrs(ds, _MOM6.axis_varnames)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     for node, face in [("xq", "xh"), ("yq", "yh")]:
         if ds.sizes[node] - ds.sizes[face] not in (0, 1):
@@ -535,6 +563,7 @@ def mitgcm_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.
     ds = _maybe_rename_variables(ds, _MITGCM.varnames_mapping)
     ds = _set_axis_attrs(ds, _MITGCM.axis_varnames)
     ds = _maybe_swap_depth_direction(ds)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     ds = sgrid._attach_sgrid_metadata(
         ds,
@@ -586,6 +615,7 @@ def croco_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr.D
 
     ds = _maybe_rename_variables(ds, _CROCO.varnames_mapping)
     ds = _maybe_convert_time_from_float_to_timedelta(ds)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     ds = sgrid._attach_sgrid_metadata(
         ds,
@@ -630,6 +660,8 @@ def copernicusmarine_to_sgrid(
     See https://help.marine.copernicus.eu/en/collections/9080063-copernicus-marine-toolbox for more information on the copernicusmarine toolbox.
     The toolbox to ingest data from most of the products on the Copernicus Marine Service (https://data.marine.copernicus.eu/products) into an xarray.Dataset.
     You can use indexing and slicing to select a subset of the data before passing it to this function.
+    W is negated when its ``standard_name`` indicates a direction opposite to the ``positive`` attribute of depth.
+    A warning is logged if either direction cannot be determined.
 
     """
     field_das = _normalize_fields(fields)
@@ -639,8 +671,7 @@ def copernicusmarine_to_sgrid(
 
     ds = _maybe_rename_coords(ds, _COPERNICUS_MARINE_AXIS_VARNAMES)
     ds = _maybe_expand_depth_dimension(ds)
-
-    ds = _flip_w_to_positive_down(ds)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     # use dummy *_center dimensions - this is A grid data (all defined on nodes)
     ds = sgrid._attach_sgrid_metadata(
@@ -697,6 +728,7 @@ def delft3d_to_sgrid(*, fields: dict[str, xr.Dataset | xr.DataArray], coords: xr
     ds = _maybe_rename_variables(ds, _DELFT3D_X.varnames_mapping)
     ds = _set_coords(ds, _DELFT3D_X.axis_varnames.keys())
     ds = _set_axis_attrs(ds, _DELFT3D_X.axis_varnames)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
 
     ds = sgrid._attach_sgrid_metadata(
         ds,
@@ -874,7 +906,9 @@ def fesom_to_ugrid(ds: ux.UxDataset) -> ux.UxDataset:
             ds = ds.rename_dims({try_dim: target})
 
     interface_dim, center_dim = _detect_vertical_coordinates(ds, _FESOM2_VERTICAL_DIMS)
-    return _rename_vertical_dims(ds, interface_dim, center_dim)
+    ds = _rename_vertical_dims(ds, interface_dim, center_dim)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
+    return ds
 
 
 def icon_to_ugrid(ds: ux.UxDataset) -> ux.UxDataset:
@@ -905,4 +939,6 @@ def icon_to_ugrid(ds: ux.UxDataset) -> ux.UxDataset:
     """
     ds = ds.copy()
     interface_dim, center_dim = _detect_vertical_coordinates(ds, _ICON_VERTICAL_DIMS)
-    return _rename_vertical_dims(ds, interface_dim, center_dim)
+    ds = _rename_vertical_dims(ds, interface_dim, center_dim)
+    ds = _maybe_flip_w_to_positive_depth_direction(ds)
+    return ds

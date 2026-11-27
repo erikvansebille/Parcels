@@ -251,6 +251,96 @@ def test_convert_does_not_modify_input_w(converter):
     xr.testing.assert_identical(W, W_before)
 
 
+@pytest.mark.parametrize(
+    "standard_name, positive, expected",
+    [
+        ("upward_sea_water_velocity", "down", [-1.0, 2.0]),
+        ("upward_sea_water_velocity", "up", [1.0, -2.0]),
+        ("downward_sea_water_velocity", "up", [-1.0, 2.0]),
+        ("downward_sea_water_velocity", "down", [1.0, -2.0]),
+        ("UPWARD_sea_water_velocity", "DOWN", [-1.0, 2.0]),
+    ],
+)
+def test_maybe_flip_w_to_match_depth(standard_name, positive, expected, caplog):
+    W = xr.DataArray([1.0, -2.0], dims="depth", attrs={"standard_name": standard_name, "units": "m s-1"})
+    ds = xr.Dataset({"W": W}, coords={"depth": ("depth", [0, 1], {"positive": positive})})
+    original = W.copy(deep=True)
+
+    result = convert._maybe_flip_w_to_positive_depth_direction(ds)
+
+    np.testing.assert_array_equal(result["W"].values, expected)
+    assert result["W"].attrs == original.attrs
+    xr.testing.assert_identical(W, original)
+    assert not caplog.records
+
+
+@pytest.mark.parametrize("standard_name", [None, "sea_water_velocity", "upward_and_downward_velocity"])
+def test_maybe_flip_w_unknown_direction(standard_name, caplog):
+    attrs = {} if standard_name is None else {"standard_name": standard_name}
+    ds = xr.Dataset({"W": ("depth", [1.0, -2.0], attrs)}, coords={"depth": ("depth", [0, 1], {"positive": "down"})})
+
+    result = convert._maybe_flip_w_to_positive_depth_direction(ds)
+
+    np.testing.assert_array_equal(result["W"].values, [1.0, -2.0])
+    assert "positive W may not be in the same direction as positive depth" in caplog.text
+
+
+@pytest.mark.parametrize("positive", [None, "invalid"])
+def test_maybe_flip_w_unknown_depth_direction(positive, caplog):
+    attrs = {} if positive is None else {"positive": positive}
+    ds = xr.Dataset(
+        {"W": ("depth", [1.0, -2.0], {"standard_name": "upward_sea_water_velocity"})},
+        coords={"depth": ("depth", [0, 1], attrs)},
+    )
+
+    result = convert._maybe_flip_w_to_positive_depth_direction(ds)
+
+    np.testing.assert_array_equal(result["W"].values, [1.0, -2.0])
+    assert "positive direction of depth" in caplog.text
+
+
+def test_maybe_flip_w_without_depth_or_w(caplog):
+    ds = xr.Dataset({"W": ((), 1.0, {"standard_name": "upward_sea_water_velocity"})})
+    result = convert._maybe_flip_w_to_positive_depth_direction(ds)
+    assert result["W"].item() == 1.0
+    assert "positive direction of depth" in caplog.text
+
+    caplog.clear()
+    convert._maybe_flip_w_to_positive_depth_direction(xr.Dataset())
+    assert not caplog.records
+
+
+@pytest.mark.parametrize("converter", ["nemo_to_sgrid", "copernicusmarine_to_sgrid"])
+def test_convert_w_direction_matches_depth(converter):
+    if converter == "nemo_to_sgrid":
+        coords = xr.Dataset(
+            {
+                "glamf": (("y", "x"), np.zeros((2, 2))),
+                "gphif": (("y", "x"), np.zeros((2, 2))),
+            },
+            coords={"depthw": ("depthw", [0.0, 1.0], {"positive": "down"})},
+        )
+        W = xr.DataArray(
+            np.ones((2, 2, 2)), dims=("depthw", "y", "x"), attrs={"standard_name": "upward_sea_water_velocity"}
+        )
+        result = convert.nemo_to_sgrid(fields={"W": W}, coords=coords)
+    else:
+        W = xr.DataArray(
+            np.ones((2, 2, 2)),
+            dims=("depth", "latitude", "longitude"),
+            coords={
+                "depth": ("depth", [0.0, 1.0], {"axis": "Z", "positive": "down"}),
+                "latitude": ("latitude", [0.0, 1.0], {"axis": "Y"}),
+                "longitude": ("longitude", [0.0, 1.0], {"axis": "X"}),
+            },
+            attrs={"standard_name": "upward_sea_water_velocity"},
+        )
+        result = convert.copernicusmarine_to_sgrid(fields={"W": W})
+
+    np.testing.assert_array_equal(result["W"].values, -np.ones((2, 2, 2)))
+    np.testing.assert_array_equal(W.values, np.ones((2, 2, 2)))
+
+
 def test_convert_raises_on_existing_grid_metadata():
     ds = datasets_circulation_models["ds_copernicusmarine"]
     coords = ds[["time", "depth", "latitude", "longitude"]]
