@@ -5,10 +5,33 @@ import pytest
 
 from parcels import Field, FieldSet
 from parcels._core.model import StructuredModelData
-from parcels._datasets.structured.generated import simple_UV_dataset
+from parcels._datasets.structured.generated import simple_UV_dataset, simple_UV_sigma_dataset
 from parcels._datasets.structured.generic import T as T_structured
 from parcels._datasets.structured.generic import datasets as datasets_structured
+from parcels._datasets.unstructured.generated import sigma_coordinate_lattice_dataset
 from parcels._python import NOTSET
+
+
+@pytest.mark.parametrize("time_varying", [False, True])
+def test_structured_model_requires_depth_positive_attribute(time_varying):
+    if time_varying:
+        ds = simple_UV_sigma_dataset(n_times=2, nz=3, ny=3, nx=3)
+    else:
+        ds = simple_UV_dataset(n_times=2, nz=3, ny=3, nx=3, mesh_str="flat")
+    ds["depth"].attrs.pop("positive")
+
+    with pytest.raises(ValueError, match="Vertical coordinate 'depth'.*'positive'"):
+        FieldSet.from_sgrid_conventions(ds)
+
+
+@pytest.mark.parametrize("time_varying", [False, True])
+def test_unstructured_model_requires_depth_positive_attribute(time_varying):
+    bottom_depth = np.full((3, 3), 20.0) if time_varying else 20.0
+    ds = sigma_coordinate_lattice_dataset(3, (0.0, 1.0), (0.0, 1.0), 3, bottom_depth)
+    ds.variables["zf"].attrs.pop("positive")
+
+    with pytest.raises(ValueError, match="Vertical coordinate 'zf'.*'positive'"):
+        FieldSet.from_ugrid_conventions(ds)
 
 
 def test_model_init_fail_on_float_time_dim():

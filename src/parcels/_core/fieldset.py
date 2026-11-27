@@ -281,6 +281,8 @@ class FieldSet:
           zf - Name for coordinate and dimension for vertical positions at layer interfaces
           zc - Name for coordinate and dimension for vertical positions at layer centers
 
+        The ``zf`` coordinate must have a ``positive`` attribute specifying ``"up"`` or ``"down"``.
+
         Parameters
         ----------
         ds : uxarray.UxDataset
@@ -319,6 +321,8 @@ class FieldSet:
         This is the primary ingestion method in Parcels for structured grid datasets.
 
         Assumes that U, V, (and optionally W) variables are named 'U', 'V', and 'W' in the dataset.
+        If a vertical axis is present, its ``depth`` coordinate must have a ``positive`` attribute
+        specifying ``"up"`` or ``"down"``.
 
         Parameters
         ----------

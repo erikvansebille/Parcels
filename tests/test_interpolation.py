@@ -50,7 +50,7 @@ def field():
         {"P": (["time", "depth", "lat", "lon"], temporal_data)},
         coords={
             "time": (["time"], [np.timedelta64(t, "s") for t in [0, 2, 4]], {"axis": "T"}),
-            "depth": (["depth"], [0, 1, 2, 3], {"axis": "Z", "units": "m"}),
+            "depth": (["depth"], [0, 1, 2, 3], {"axis": "Z", "units": "m", "positive": "down"}),
             "lat": (["lat"], [0, 1, 2, 3], {"axis": "Y", "units": "m"}),
             "lon": (["lon"], [0, 1, 2, 3], {"axis": "X", "units": "m"}),
             "x": (["x"], [0.5, 1.5, 2.5, 3.5], {"axis": "X", "units": "m"}),
@@ -377,7 +377,7 @@ def test_interp_regression_v3(interp_name, interp_method, tmp_zarr, tmp_parquet)
         },
         coords={
             "time": (["time"], time, {"axis": "T"}),
-            "depth": (["depth"], ds_input["depth"].values, {"axis": "Z", "units": "m"}),
+            "depth": (["depth"], ds_input["depth"].values, {"axis": "Z", "units": "m", "positive": "down"}),
             "YC": (["YC"], np.arange(ydim) + 0.5, {"axis": "Y", "units": "m"}),
             "YG": (["YG"], np.arange(ydim), {"axis": "Y", "units": "m"}),
             "XC": (["XC"], np.arange(xdim) + 0.5, {"axis": "X", "units": "m"}),

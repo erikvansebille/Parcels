@@ -30,7 +30,7 @@ class BaseGrid(ABC):
 
     @property
     def depth_positive_direction(self) -> str:
-        """Direction of positive vertical coordinates, defaulting to ``"down"`` when unspecified."""
+        """Direction of positive vertical coordinates."""
         raise NotImplementedError
 
     @abstractmethod

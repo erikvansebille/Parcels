@@ -92,7 +92,7 @@ def test_xgrid_depth_positive_direction_without_vertical_axis():
     grid = FieldSet.from_sgrid_conventions(ds).U.grid
 
     assert "Z" not in grid.axes
-    assert grid.depth_positive_direction == "down"
+    assert grid.depth_positive_direction == "up"
 
 
 @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ def test_dim_with_duplicate_axis():
 @pytest.mark.parametrize("ds", [datasets["ds_2d_left"]])
 def test_vertical1D_field(ds):
     ds = ds.drop_vars(set(ds.data_vars) - {"grid"})
-    ds["depth"] = (["ZG"], np.linspace(0, 1, ds["depth"].size), {"axis": "Z"})
+    ds["depth"] = (["ZG"], np.linspace(0, 1, ds["depth"].size), {"axis": "Z", "positive": "down"})
     ds["z1d"] = xr.DataArray(np.linspace(0, 10, ds["depth"].size), dims=("ZG",))
     ds = ds.reset_coords("z1d")
 

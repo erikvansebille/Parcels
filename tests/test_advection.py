@@ -198,7 +198,7 @@ def test_advection_3D_outofbounds(direction, resubmerge_particle):
     ds = simple_UV_dataset(mesh_str="flat")
     ds["W"] = ds["V"].copy()  # Just to have W field present
     ds["U"].data[:] = 0.01  # Set U to small value (to avoid horizontal out of bounds)
-    ds["W"].data[:] = -1.0 if direction == "up" else 1.0
+    ds["W"].data[:] = 1.0 if direction == "down" else -1.0
     fieldset = FieldSet.from_sgrid_conventions(ds)
 
     def DeleteParticle(particles, fieldset):  # pragma: no cover

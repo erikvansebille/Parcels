@@ -191,6 +191,8 @@ class StructuredModelData(ModelData):
         if not skip_field_data_validation:
             data = validate_field_data(data)
         grid = XGrid(data, mesh)
+        if "Z" in grid.axes:
+            _assert_has_positive_attribute(data["depth"])
 
         self.data = data
         self.grid = grid
@@ -329,6 +331,13 @@ def assert_vertical_dimensionality(ds: xr.Dataset, allowed_dimensionality: list[
     return
 
 
+def _assert_has_positive_attribute(depth: xr.DataArray) -> None:
+    if "positive" not in depth.attrs:
+        raise ValueError(
+            f"Vertical coordinate {depth.name!r} must have a 'positive' attribute specifying 'up' or 'down'."
+        )
+
+
 def assert_vector_field_components_in_dataset(ds: xr.Dataset, vector_fields: ptyping.VectorFields) -> None:
     for components in vector_fields.values():
         for c in components:
@@ -348,7 +357,7 @@ def create_empty_constant_field_model(mesh: SphericalMesh | FlatMesh) -> Structu
             coords={
                 "lat": (["lat"], [0], {"axis": "Y", "units": unit}),
                 "lon": (["lon"], [0], {"axis": "X", "units": unit}),
-                "depth": (["depth"], [0], {"axis": "Z"}),
+                "depth": (["depth"], [0], {"axis": "Z", "positive": "up"}),
                 "time": (["time"], [0], {"axis": "T"}),
             },
         ).pipe(
@@ -380,6 +389,8 @@ class UnstructuredModelData(ModelData):
 
         if not isinstance(grid, UxGrid):
             raise ValueError(f"Expected `grid` to be a Parcels UxGrid object. Got {type(grid)}.")
+
+        _assert_has_positive_attribute(grid.z)
 
         if grid.z.ndim == 3 and not grid.z["time"].equals(data["time"]):
             raise ValueError("A time-varying (3D) z must have the same time coordinate as `data`.")
